@@ -144,6 +144,32 @@ class NSEDataFetcher:
             logger.error(f"Error fetching market summary: {str(e)}")
             return {}
 
+    def get_historical_data(self, symbol: str, interval: str = '1d', lookback: int = 30) -> List[Dict]:
+        """Fetch historical data for a given stock symbol."""
+        try:
+            handler = TA_Handler(
+                symbol=symbol,
+                exchange=self.exchange,
+                screener=self.screener,
+                interval=interval
+            )
+            historical_data = handler.get_analysis().indicators
+            # Process and format data
+            history = []
+            for data_point in historical_data[-lookback:]:
+                history.append({
+                    'date': data_point['datetime'],
+                    'open': data_point['open'],
+                    'high': data_point['high'],
+                    'low': data_point['low'],
+                    'close': data_point['close'],
+                    'volume': data_point['volume']
+                })
+            return history
+        except Exception as e:
+            logger.error(f"Error fetching historical data for {symbol}: {str(e)}")
+            return []
+
     def _get_recommendation_explanation(self, analysis) -> str:
         """Generate a detailed explanation for the trading recommendation."""
         recommendation = analysis.summary.get('RECOMMENDATION', 'NEUTRAL')

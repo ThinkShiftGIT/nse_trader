@@ -58,6 +58,16 @@ def create_app(config_class=Config):
             logger.error(f"Error getting stock {symbol}: {str(e)}")
             return jsonify({'error': f'Failed to fetch stock {symbol}'}), 500
 
+    @app.route('/api/historical/<symbol>')
+    def get_historical(symbol):
+        """Get historical data for a specific stock."""
+        try:
+            data = data_fetcher.get_historical_data(symbol)
+            return jsonify(data)
+        except Exception as e:
+            logger.error(f"Error fetching historical data for {symbol}: {str(e)}")
+            return jsonify({'error': f'Failed to fetch historical data for {symbol}'}), 500
+
     return app
 
 app = create_app()
