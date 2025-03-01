@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "nse-trader"
+version = "0.1.0"
+description = "Nigerian Stock Exchange Trading Analysis Platform"
+authors = ["NSE Trader Team"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+flask = "^3.1.0"
+pandas = "^2.2.3"
+requests = "^2.32.3"
+flask-cors = "^5.0.1"
+python-dotenv = "^1.0.1"
+tradingview-ta = "^3.3.0"
+gunicorn = "^21.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+black = "^25.1.0"
+flake8 = "^7.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
