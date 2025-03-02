@@ -171,6 +171,10 @@ class NSEDataFetcher:
             logger.error(f"Error fetching historical data for {symbol}: {str(e)}")
             return []
 
+    def get_stock_list(self) -> List[Dict]:
+        """Return a list of available stocks."""
+        return [{'symbol': symbol, 'name': self._get_company_name(symbol)} for symbol in self.market_caps.keys()]
+
     def _get_recommendation_explanation(self, analysis) -> str:
         """Generate a detailed explanation for the trading recommendation."""
         recommendation = analysis.summary.get('RECOMMENDATION', 'NEUTRAL')
