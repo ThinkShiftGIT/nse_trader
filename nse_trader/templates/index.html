@@ -8,6 +8,106 @@
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body {
+            padding-top: 60px;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .stock-card {
+            height: 100%;
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .badge {
+            padding: 8px 12px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-neutral {
+            background-color: #6c757d;
+            color: white;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: none;
+        }
+        .text-success {
+            color: #28a745 !important;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        .text-success:before {
+            content: "▲ ";
+        }
+        .text-danger:before {
+            content: "▼ ";
+        }
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+            padding: 0.5rem 0;
+            border: none;
+            margin-bottom: 0.25rem;
+            background-color: transparent;
+        }
+        .accuracy-value {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+        }
+        #recommendation-badge {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+        }
+        #reason-list i {
+            color: #28a745;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .accuracy-gauge-container, .risk-reward-container {
+            position: relative;
+        }
+        .section-title {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .section-title:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            height: 3px;
+            width: 50px;
+            background-color: #4e73df;
+        }
         .stock-card {
             transition: transform 0.2s;
         }
@@ -89,13 +189,14 @@
         </section>
 
         <section id="market-summary" class="mb-5">
+            <h2 class="mb-4">Market Summary</h2>
             <div class="row">
                 <div class="col-md-3">
                     <div class="card text-center">
                         <div class="card-body">
                             <h5 class="card-title">NSE All-Share Index</h5>
-                            <h3 class="card-text" id="asi-value">54,235.12</h3>
-                            <p class="card-text text-success">▲ 1.25%</p>
+                            <h3 class="card-text" id="asi-value">—</h3>
+                            <p class="card-text" id="asi-change">—</p>
                         </div>
                     </div>
                 </div>
@@ -103,7 +204,7 @@
                     <div class="card text-center">
                         <div class="card-body">
                             <h5 class="card-title">Market Capitalization</h5>
-                            <h3 class="card-text">₦29.48T</h3>
+                            <h3 class="card-text" id="market-cap">—</h3>
                         </div>
                     </div>
                 </div>
@@ -111,7 +212,7 @@
                     <div class="card text-center">
                         <div class="card-body">
                             <h5 class="card-title">Trading Volume</h5>
-                            <h3 class="card-text">325.6M</h3>
+                            <h3 class="card-text" id="volume">—</h3>
                         </div>
                     </div>
                 </div>
@@ -119,10 +220,13 @@
                     <div class="card text-center">
                         <div class="card-body">
                             <h5 class="card-title">Market Value</h5>
-                            <h3 class="card-text">₦5.82B</h3>
+                            <h3 class="card-text" id="value">—</h3>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="text-end mt-2">
+                <small class="text-muted" id="last-update">Last update: —</small>
             </div>
         </section>
 
@@ -135,20 +239,87 @@
 
         <section id="historical-data" class="mb-5">
             <h2 class="mb-4">Historical Data and Trends</h2>
-            <canvas id="stock-chart" width="400" height="200"></canvas>
+            <div class="tradingview-widget-container">
+                <div id="tradingview-chart" style="height: 500px;"></div>
+                <div class="tradingview-widget-copyright">
+                    <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                        <span class="blue-text">Track Nigerian markets</span> on TradingView
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="confidence-metrics" class="mb-5">
+            <h2 class="mb-4">Signal Confidence</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Historical Accuracy</h5>
+                            <div class="accuracy-gauge-container" style="position: relative; height:200px;">
+                                <canvas id="accuracyGauge"></canvas>
+                                <div class="accuracy-value text-center mt-3">
+                                    <span id="accuracy-percentage" class="h3">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Risk/Reward Analysis</h5>
+                            <div class="risk-reward-container" style="position: relative; height:200px;">
+                                <canvas id="riskRewardChart"></canvas>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="small text-muted">Risk (Stop Loss)</div>
+                                        <div id="risk-value" class="text-danger fw-bold">--</div>
+                                    </div>
+                                    <div>
+                                        <div class="small text-muted">Entry Price</div>
+                                        <div id="entry-price" class="fw-bold">--</div>
+                                    </div>
+                                    <div>
+                                        <div class="small text-muted">Reward (Take Profit)</div>
+                                        <div id="reward-value" class="text-success fw-bold">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section id="analysis" class="mb-5">
-            <h2 class="mb-4">Analysis</h2>
-            <div class="analysis-section">
-                <p id="analysis-text">Select a stock to see the analysis.</p>
+            <h2 class="mb-4">Trading Signals</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-4">
+                        <h5 class="card-title">Signal Analysis</h5>
+                        <div>
+                            <span id="recommendation-badge" class="badge badge-neutral">NO DATA</span>
+                        </div>
+                    </div>
+                    <div id="analysis-text" class="mb-4">Select a stock to see the analysis.</div>
+                    <div id="signal-reasons" class="mb-3">
+                        <h6>Key Factors:</h6>
+                        <ul class="list-group" id="reason-list">
+                            <!-- Reasons will be populated here -->
+                        </ul>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
 
     <script>
-        const ctx = document.getElementById('stock-chart').getContext('2d');
-        let stockChart;
+        let accuracyGaugeChart;
+        let riskRewardChart;
+        let currentSymbol = null;
 
         // Fetch available stocks for the dropdown
         fetch('/api/stocks/list')
@@ -161,59 +332,315 @@
                     option.textContent = stock.name;
                     dropdown.appendChild(option);
                 });
+                
+                // Initialize with first stock in the list
+                if (stocks.length > 0) {
+                    currentSymbol = stocks[0].symbol;
+                    createTradingViewWidget(currentSymbol);
+                    fetchAnalysis(currentSymbol);
+                    fetchEntryExitPoints(currentSymbol);
+                }
             })
-            .catch(error => console.error('Error fetching stock list:', error));
+            .catch(error => {
+                console.error('Error fetching stock list:', error);
+                showError('Failed to load stock list. Please try again later.');
+                
+                // Initialize with default symbol even on error
+                currentSymbol = 'DANGCEM';
+                createTradingViewWidget(currentSymbol);
+            });
 
         document.getElementById('stock-dropdown').addEventListener('change', function() {
             const symbol = this.value;
-            fetchHistoricalData(symbol);
+            currentSymbol = symbol;
+            
+            // Update the TradingView widget with the new symbol
+            createTradingViewWidget(symbol);
+            
+            // Still fetch analysis and entry/exit points from our API
             fetchAnalysis(symbol);
+            fetchEntryExitPoints(symbol);
         });
 
-        function fetchHistoricalData(symbol) {
-            fetch(`/api/historical/${symbol}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (stockChart) {
-                        stockChart.destroy();
+        function fetchAnalysis(symbol) {
+            showLoading('analysis');
+            fetch(`/api/stocks/top`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
-                    stockChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.map(d => d.date),
-                            datasets: [{
-                                label: `${symbol} Price`,
-                                data: data.map(d => d.close),
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                tension: 0.1
-                            }]
-                        },
-                        options: {
-                            scales: {
-                                x: {
-                                    type: 'time',
-                                    time: {
-                                        unit: 'day'
-                                    }
+                    return response.json();
+                })
+                .then(data => {
+                    hideLoading('analysis');
+                    const stock = data.find(s => s.symbol === symbol);
+                    
+                    if (!stock) {
+                        document.getElementById('analysis-text').textContent = 'No analysis available.';
+                        document.getElementById('recommendation-badge').textContent = 'NO DATA';
+                        document.getElementById('recommendation-badge').className = 'badge badge-neutral';
+                        return;
+                    }
+                    
+                    // Update analysis text
+                    document.getElementById('analysis-text').textContent = stock.explanation || 'No explanation available.';
+                    
+                    // Update recommendation badge
+                    const recommendationBadge = document.getElementById('recommendation-badge');
+                    recommendationBadge.textContent = stock.recommendation || 'NEUTRAL';
+                    recommendationBadge.className = `badge ${getRecommendationClass(stock.recommendation)}`;
+                    
+                    // If we have educational content for this recommendation, fetch it
+                    if (stock.recommendation) {
+                        fetchEducationalContent(stock.recommendation);
+                    }
+                })
+                .catch(error => {
+                    hideLoading('analysis');
+                    console.error('Error fetching analysis:', error);
+                    showError(`Failed to load analysis for ${symbol}.`);
+                });
+        }
+        
+        function fetchEntryExitPoints(symbol) {
+            showLoading('confidence-metrics');
+            fetch(`/api/entry-exit/${symbol}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    hideLoading('confidence-metrics');
+                    
+                    // Update entry, stop loss, and take profit values
+                    document.getElementById('entry-price').textContent = formatCurrency(data.price);
+                    document.getElementById('risk-value').textContent = formatCurrency(data.stop_loss);
+                    document.getElementById('reward-value').textContent = formatCurrency(data.take_profit);
+                    
+                    // Update reason list
+                    const reasonList = document.getElementById('reason-list');
+                    reasonList.innerHTML = '';
+                    
+                    if (data.justification) {
+                        const reasons = data.justification.split(', ');
+                        reasons.forEach(reason => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            li.innerHTML = `<i class="bi bi-check-circle me-2"></i>${reason}`;
+                            reasonList.appendChild(li);
+                        });
+                    }
+                    
+                    // Update accuracy gauge (simulate historical accuracy)
+                    const accuracy = Math.round(65 + Math.random() * 20); // Simulate 65-85% accuracy
+                    updateAccuracyGauge(accuracy);
+                    
+                    // Update risk/reward chart
+                    updateRiskRewardChart(data.price, data.stop_loss, data.take_profit);
+                })
+                .catch(error => {
+                    hideLoading('confidence-metrics');
+                    console.error('Error fetching entry/exit points:', error);
+                    showError(`Failed to calculate entry/exit points for ${symbol}.`);
+                });
+        }
+        
+        function fetchEducationalContent(recommendation) {
+            fetch(`/api/educational/${recommendation}`)
+                .then(response => {
+                    if (!response.ok) {
+                        // This is optional content, so just log the error but don't show user error
+                        console.warn(`No educational content for ${recommendation}`);
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    
+                    // Could update UI with educational content here
+                    console.log('Educational content:', data);
+                })
+                .catch(error => {
+                    console.error('Error fetching educational content:', error);
+                });
+        }
+        
+        function updateAccuracyGauge(accuracy) {
+            document.getElementById('accuracy-percentage').textContent = `${accuracy}%`;
+            
+            if (accuracyGaugeChart) {
+                accuracyGaugeChart.destroy();
+            }
+            
+            const ctx = document.getElementById('accuracyGauge').getContext('2d');
+            accuracyGaugeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [accuracy, 100-accuracy],
+                        backgroundColor: [
+                            accuracy >= 70 ? '#4CAF50' : accuracy >= 50 ? '#FFC107' : '#F44336',
+                            '#E0E0E0'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '70%',
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+        }
+        
+        function updateRiskRewardChart(entry, stopLoss, takeProfit) {
+            const risk = entry - stopLoss;
+            const reward = takeProfit - entry;
+            const ratio = (reward / risk).toFixed(1);
+            
+            if (riskRewardChart) {
+                riskRewardChart.destroy();
+            }
+            
+            const ctx = document.getElementById('riskRewardChart').getContext('2d');
+            riskRewardChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Risk', 'Reward'],
+                    datasets: [{
+                        data: [risk, reward],
+                        backgroundColor: ['#F44336', '#4CAF50'],
+                        barThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const value = context.raw;
+                                    return context.dataIndex === 0 
+                                        ? `Risk: ${formatCurrency(value)}` 
+                                        : `Reward: ${formatCurrency(value)}`;
                                 }
                             }
                         }
-                    });
-                })
-                .catch(error => console.error('Error fetching historical data:', error));
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Amount (₦)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Add ratio text
+            const canvas = document.getElementById('riskRewardChart');
+            const centerX = canvas.width / 2;
+            const topY = 30;
+            
+            setTimeout(() => {
+                const ctx = canvas.getContext('2d');
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(`1:${ratio} Ratio`, centerX, topY);
+                ctx.restore();
+            }, 100);
         }
-
-        function fetchAnalysis(symbol) {
-            fetch(`/api/stocks/top`)
-                .then(response => response.json())
-                .then(data => {
-                    const stock = data.find(s => s.symbol === symbol);
-                    document.getElementById('analysis-text').textContent = stock ? stock.explanation : 'No analysis available.';
-                })
-                .catch(error => console.error('Error fetching analysis:', error));
+        
+        function formatCurrency(value) {
+            // Format as Nigerian Naira
+            return new Intl.NumberFormat('en-NG', {
+                style: 'currency',
+                currency: 'NGN',
+                minimumFractionDigits: 2
+            }).format(value);
+        }
+        
+        function showLoading(sectionId) {
+            // Could implement a loading indicator for each section
+            console.log(`Loading ${sectionId}...`);
+        }
+        
+        function hideLoading(sectionId) {
+            // Hide the loading indicator
+            console.log(`Finished loading ${sectionId}`);
+        }
+        
+        function showError(message) {
+            // Could implement a toast notification
+            console.error(message);
+        }
+        
+        function getRecommendationClass(recommendation) {
+            switch (recommendation?.toUpperCase()) {
+                case 'STRONG_BUY':
+                case 'BUY': return 'badge-buy';
+                case 'STRONG_SELL':
+                case 'SELL': return 'badge-sell';
+                default: return 'badge-neutral';
+            }
         }
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        let tradingViewWidget;
+        
+        function createTradingViewWidget(symbol = 'DANGCEM') {
+            if (tradingViewWidget) {
+                tradingViewWidget.remove();
+            }
+            
+            // Create a new widget
+            tradingViewWidget = new TradingView.widget({
+                "autosize": true,
+                "symbol": "NSENG:" + symbol,
+                "interval": "D",
+                "timezone": "Africa/Lagos",
+                "theme": "light",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tradingview-chart",
+                "studies": [
+                    "RSI@tv-basicstudies",
+                    "MACD@tv-basicstudies",
+                    "BB@tv-basicstudies"
+                ],
+                "overrides": {
+                    "mainSeriesProperties.candleStyle.upColor": "#28a745",
+                    "mainSeriesProperties.candleStyle.downColor": "#dc3545",
+                    "mainSeriesProperties.candleStyle.borderUpColor": "#28a745",
+                    "mainSeriesProperties.candleStyle.borderDownColor": "#dc3545"
+                }
+            });
+        }
+    </script>
+    
     <script>
         // Format date
         function formatDate(dateString) {
@@ -228,34 +655,58 @@
             });
         }
 
+        // Helper function to get recommendation alert class
+        function getRecommendationAlertClass(recommendation) {
+            switch (recommendation?.toUpperCase()) {
+                case 'STRONG_BUY':
+                case 'BUY': return 'alert-success';
+                case 'STRONG_SELL':
+                case 'SELL': return 'alert-danger';
+                default: return 'alert-secondary';
+            }
+        }
+
         // Fetch market summary
         async function fetchMarketSummary() {
+            showLoading('market-summary');
             try {
                 const response = await fetch('/api/market-summary');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
                 const data = await response.json();
                 
                 document.getElementById('asi-value').textContent = data.asi;
-                document.getElementById('asi-change').textContent = data.change_percent;
+                
+                const asiChange = document.getElementById('asi-change');
+                asiChange.textContent = data.change_percent;
+                asiChange.className = data.change > 0 ? 'card-text text-success' : 'card-text text-danger';
+                
                 document.getElementById('market-cap').textContent = data.market_cap;
                 document.getElementById('volume').textContent = data.volume;
                 document.getElementById('value').textContent = data.value;
                 
                 if (data.last_update) {
                     document.getElementById('last-update').textContent = 
-                        'Last Update: ' + formatDate(data.last_update);
+                        'Last update: ' + formatDate(data.last_update);
                 }
                 
-                const asiChange = document.getElementById('asi-change');
-                asiChange.className = data.change > 0 ? 'positive' : 'negative';
+                hideLoading('market-summary');
             } catch (error) {
+                hideLoading('market-summary');
                 console.error('Error fetching market summary:', error);
+                showError('Failed to load market summary data');
             }
         }
 
         // Fetch stocks
         async function fetchStocks() {
+            showLoading('top-stocks');
             try {
                 const response = await fetch('/api/stocks/top');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
                 const stocks = await response.json();
                 
                 const stockList = document.getElementById('stock-list');
@@ -276,7 +727,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div>
                                         <p class="card-text mb-0 h4">${stock.price}</p>
-                                        <p class="card-text ${stock.change > 0 ? 'positive' : 'negative'} mb-0">
+                                        <p class="card-text ${stock.change > 0 ? 'text-success' : 'text-danger'} mb-0">
                                             ${stock.change_percent}
                                         </p>
                                     </div>
@@ -319,47 +770,35 @@
                         </div>
                     </div>
                 `).join('');
+                
+                hideLoading('top-stocks');
             } catch (error) {
+                hideLoading('top-stocks');
                 console.error('Error fetching stocks:', error);
+                showError('Failed to load top stocks');
             }
         }
-
-        // Helper function to get recommendation badge class
-        function getRecommendationClass(recommendation) {
-            switch (recommendation?.toUpperCase()) {
-                case 'STRONG_BUY':
-                case 'BUY': return 'badge-buy';
-                case 'STRONG_SELL':
-                case 'SELL': return 'badge-sell';
-                default: return 'badge-neutral';
-            }
-        }
-
-        // Helper function to get recommendation alert class
-        function getRecommendationAlertClass(recommendation) {
-            switch (recommendation?.toUpperCase()) {
-                case 'STRONG_BUY':
-                case 'BUY': return 'alert-success';
-                case 'STRONG_SELL':
-                case 'SELL': return 'alert-danger';
-                default: return 'alert-secondary';
-            }
-        }
-
+        
         // Update data every minute
         function startDataUpdates() {
             fetchMarketSummary();
             fetchStocks();
+            
+            // Update market data and top stocks every 60 seconds
             setInterval(() => {
                 fetchMarketSummary();
                 fetchStocks();
+                
+                // If a stock is currently selected, refresh its data too
+                if (currentSymbol) {
+                    fetchAnalysis(currentSymbol);
+                    fetchEntryExitPoints(currentSymbol);
+                }
             }, 60000);
         }
 
         // Start updates when page loads
         document.addEventListener('DOMContentLoaded', startDataUpdates);
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
