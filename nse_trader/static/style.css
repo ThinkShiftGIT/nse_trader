@@ -11,15 +11,29 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.navbar-brand {
+    font-weight: bold;
+}
+
 .card {
     border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.card-text {
+    font-size: 1rem;
 }
 
 .stock-card {
@@ -34,12 +48,38 @@ body {
     transform: translateY(-5px);
 }
 
-.positive {
-    color: #28a745;
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 20px;
 }
 
-.negative {
-    color: #dc3545;
+.badge-buy {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-sell {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-neutral {
+    background-color: #6c757d;
+    color: white;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
 }
 
 .market-summary-card {
@@ -62,27 +102,6 @@ body {
 .market-summary-card .card-text {
     font-size: 1.5rem;
     font-weight: 600;
-}
-
-.badge {
-    padding: 6px 12px;
-    font-weight: 500;
-    border-radius: 20px;
-}
-
-.badge-buy {
-    background-color: #28a745;
-    color: white;
-}
-
-.badge-sell {
-    background-color: #dc3545;
-    color: white;
-}
-
-.badge-neutral {
-    background-color: #6c757d;
-    color: white;
 }
 
 .trading-info {
@@ -115,4 +134,11 @@ body {
 #last-update {
     font-size: 0.9rem;
     color: #6c757d;
+}
+
+#stock-chart {
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
