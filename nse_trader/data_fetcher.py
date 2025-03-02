@@ -153,7 +153,8 @@ class NSEDataFetcher:
                 screener=self.screener,
                 interval=interval
             )
-            historical_data = handler.get_analysis().indicators
+            analysis = handler.get_analysis()
+            historical_data = analysis.indicators
             # Process and format data
             history = []
             for data_point in historical_data[-lookback:]:
