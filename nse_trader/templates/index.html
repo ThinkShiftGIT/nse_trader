@@ -81,6 +81,18 @@
     </nav>
 
     <div class="container mt-4">
+        <section id="stock-selector" class="mb-5">
+            <h2 class="mb-4">Select Stock</h2>
+            <select id="stock-dropdown" class="form-select" aria-label="Select Stock">
+                <option selected disabled>Choose a stock...</option>
+                <option value="DANGCEM">Dangote Cement Plc</option>
+                <option value="MTNN">MTN Nigeria</option>
+                <option value="GTCO">GT Bank</option>
+                <option value="ZENITHBANK">Zenith Bank</option>
+                <option value="AIRTELAFRI">Airtel Africa Plc</option>
+            </select>
+        </section>
+
         <section id="market-summary" class="mb-5">
             <div class="row">
                 <div class="col-md-3">
@@ -134,55 +146,64 @@
         <section id="analysis" class="mb-5">
             <h2 class="mb-4">Analysis</h2>
             <div class="analysis-section">
-                <!-- Analysis will be dynamically inserted here -->
+                <p id="analysis-text">Select a stock to see the analysis.</p>
             </div>
         </section>
+    </div>
 
-        <div class="mb-4">
-            <input type="text" id="stock-search" class="form-control" placeholder="Search for a stock...">
-        </div>
+    <script>
+        const ctx = document.getElementById('stock-chart').getContext('2d');
+        let stockChart;
 
-        <script>
-            const ctx = document.getElementById('stock-chart').getContext('2d');
-            let stockChart;
+        document.getElementById('stock-dropdown').addEventListener('change', function() {
+            const symbol = this.value;
+            fetchHistoricalData(symbol);
+            fetchAnalysis(symbol);
+        });
 
-            document.getElementById('stock-search').addEventListener('input', function(event) {
-                const symbol = event.target.value.toUpperCase();
-                if (symbol) {
-                    fetch(`/api/historical/${symbol}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (stockChart) {
-                                stockChart.destroy();
-                            }
-                            stockChart = new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: data.map(d => d.date),
-                                    datasets: [{
-                                        label: `${symbol} Price`,
-                                        data: data.map(d => d.close),
-                                        borderColor: 'rgba(75, 192, 192, 1)',
-                                        tension: 0.1
-                                    }]
-                                },
-                                options: {
-                                    scales: {
-                                        x: {
-                                            type: 'time',
-                                            time: {
-                                                unit: 'day'
-                                            }
-                                        }
+        function fetchHistoricalData(symbol) {
+            fetch(`/api/historical/${symbol}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (stockChart) {
+                        stockChart.destroy();
+                    }
+                    stockChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(d => d.date),
+                            datasets: [{
+                                label: `${symbol} Price`,
+                                data: data.map(d => d.close),
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    type: 'time',
+                                    time: {
+                                        unit: 'day'
                                     }
                                 }
-                            });
-                        })
-                        .catch(error => console.error('Error fetching historical data:', error));
-                }
-            });
-        </script>
-    </div>
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching historical data:', error));
+        }
+
+        function fetchAnalysis(symbol) {
+            fetch(`/api/stocks/top`)
+                .then(response => response.json())
+                .then(data => {
+                    const stock = data.find(s => s.symbol === symbol);
+                    document.getElementById('analysis-text').textContent = stock ? stock.explanation : 'No analysis available.';
+                })
+                .catch(error => console.error('Error fetching analysis:', error));
+        }
+    </script>
 
     <script>
         // Format date
