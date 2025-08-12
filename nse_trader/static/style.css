@@ -5,6 +5,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: #f8f9fa;
+    padding-top: 60px;
 }
 
 .navbar {
@@ -20,6 +21,7 @@ body {
     margin-bottom: 20px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
 }
 
 .card:hover {
@@ -46,21 +48,26 @@ body {
 
 .stock-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .badge {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
+    padding: 8px 12px;
     font-weight: 500;
-    border-radius: 20px;
+    border-radius: 4px;
 }
 
-.badge-buy {
+.badge-success {
     background-color: #28a745;
     color: white;
 }
 
-.badge-sell {
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-danger {
     background-color: #dc3545;
     color: white;
 }
@@ -78,57 +85,103 @@ body {
     color: #dc3545 !important;
 }
 
-.text-muted {
-    color: #6c757d !important;
+.text-success:before {
+    content: "▲ ";
+}
+
+.text-danger:before {
+    content: "▼ ";
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 0.5rem 0;
+    border: none;
+    margin-bottom: 0.25rem;
+    background-color: transparent;
+}
+
+.accuracy-value {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+#recommendation-badge {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+}
+
+#reason-list i {
+    color: #28a745;
+}
+
+.chart-container {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.accuracy-gauge-container, .risk-reward-container {
+    position: relative;
+}
+
+.section-title {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.section-title:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    height: 3px;
+    width: 50px;
+    background-color: #4e73df;
+}
+
+.positive {
+    color: #4CAF50;
+}
+
+.negative {
+    color: #F44336;
+}
+
+.analysis-section {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+}
+
+.recommendation .badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.price-targets {
+    background: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+.badge-buy {
+    background-color: #4CAF50;
+}
+
+.badge-sell {
+    background-color: #F44336;
 }
 
 .market-summary-card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-}
-
-.market-summary-card:hover {
-    transform: translateY(-5px);
-}
-
-.market-summary-card .card-title {
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.market-summary-card .card-text {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.trading-info {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-}
-
-.alert {
     border: none;
-    border-radius: 6px;
-}
-
-.alert-success {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #155724;
-}
-
-.alert-danger {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #721c24;
-}
-
-.alert-secondary {
-    background-color: rgba(108, 117, 125, 0.1);
-    color: #383d41;
+    border-radius: 0;
 }
 
 #last-update {
